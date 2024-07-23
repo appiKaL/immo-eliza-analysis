@@ -49,7 +49,6 @@ def preprocess_data(filepath):
 
     joblib.dump(scaler, "scaler.pkl")
 
-    # Print the number of data points and features
     print(f"Number of data points: {X.shape[0]}")
     print(f"Number of features: {X.shape[1]}")
 
