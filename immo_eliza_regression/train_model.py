@@ -38,3 +38,4 @@ print(f"Mean Absolute Error: {mae}")
 print(f"R2 Score: {r2}")
 
 joblib.dump(best_model, "xgboost_model.pkl")
+
