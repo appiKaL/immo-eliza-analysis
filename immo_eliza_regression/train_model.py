@@ -5,10 +5,13 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import xgboost as xgb
 from scipy.stats import uniform, randint
 from data_preprocessing import preprocess_data
+import pandas as pd
 
-# Load the preprocessed data
 X_scaled = np.load("X_scaled.npy")
 y = np.load("y.npy")
+
+feature_names = X.columns.tolist()
+joblib.dump(feature_names, "feature_names.pkl")
 
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
@@ -39,3 +42,11 @@ print(f"R2 Score: {r2}")
 
 joblib.dump(best_model, "xgboost_model.pkl")
 
+feature_names = joblib.load("feature_names.pkl")
+
+missing_features = [feature for feature in feature_names if feature not in input_df.columns]
+if missing_features:
+    print(f"Warning: The following features are missing from the DataFrame: {missing_features}")
+
+available_features = [feature for feature in feature_names if feature in input_df.columns]
+input_df = input_df[available_features]

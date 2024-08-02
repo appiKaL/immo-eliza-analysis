@@ -1,25 +1,20 @@
-import pandas as pd
 import numpy as np
-from sklearn.preprocessing import RobustScaler
-from sklearn.impute import SimpleImputer
+import pandas as pd
 import joblib
+from sklearn.preprocessing import RobustScaler
 
-def preprocess_data(filepath):
-    df = pd.read_excel(filepath)
-
-    numeric_df = df.select_dtypes(include=[np.number])
-    non_numeric_df = df.select_dtypes(exclude=[np.number])
-
-    imputer = SimpleImputer(strategy='mean')
-    numeric_df_imputed = pd.DataFrame(imputer.fit_transform(numeric_df), columns=numeric_df.columns)
-
-    df = pd.concat([numeric_df_imputed, non_numeric_df], axis=1)
+def preprocess_data(file_path):
+    
+    df = pd.read_excel(file_path)
 
     categorical_columns = df.select_dtypes(include=["object"]).columns
+    encoders = {}
     for column in categorical_columns:
-        df[column] = df[column].astype('category').cat.codes
+        df[column] = df[column].astype('category')
+        encoders[column] = df[column].cat.categories
+        df[column] = df[column].cat.codes
 
-    numeric_columns = numeric_df_imputed.columns
+    numeric_columns = df.select_dtypes(include=["number"]).columns
     for column in numeric_columns:
         lower_cap = df[column].quantile(0.01)
         upper_cap = df[column].quantile(0.99)
@@ -44,17 +39,15 @@ def preprocess_data(filepath):
     X = df.drop("Price", axis=1)
     y = df["Price"]
 
-    scaler = RobustScaler()
-    X_scaled = scaler.fit_transform(X)
+    joblib.dump(encoders, "encoders.pkl")
+    joblib.dump(X.columns.tolist(), "feature_names.pkl")
 
-    joblib.dump(scaler, "scaler.pkl")
-
-    print(f"Number of data points: {X.shape[0]}")
-    print(f"Number of features: {X.shape[1]}")
-
-    return X_scaled, y
+    return X, y
 
 if __name__ == "__main__":
-    X_scaled, y = preprocess_data("final_dataset.xlsx")
+    X, y = preprocess_data("final_dataset.xlsx")
+    scaler = RobustScaler()
+    X_scaled = scaler.fit_transform(X)
+    joblib.dump(scaler, "scaler.pkl")
     np.save("X_scaled.npy", X_scaled)
     np.save("y.npy", y)
